@@ -1,0 +1,10 @@
+# Build scripts (not needed to run the extension)
+generate-icons.js
+download-fonts.js
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/

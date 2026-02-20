@@ -1,0 +1,8 @@
+/*
+  The overlay host element is positioned entirely via JavaScript (content.js)
+  using style.setProperty with 'important' priority, which beats page stylesheets
+  without relying on CSS specificity tricks here.
+
+  The actual overlay UI lives inside Shadow DOM and is styled within content.js.
+  This file is kept because manifest.json declares it; it intentionally has no rules.
+*/

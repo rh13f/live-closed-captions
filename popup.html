@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Closed Captions</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="popup-container">
+    <header>
+      <img src="icons/icon48.png" alt="CC" class="logo" />
+      <h1>Live Captions</h1>
+    </header>
+
+    <div class="status-row">
+      <span class="status-dot" id="status-dot"></span>
+      <span class="status-label" id="status-label">Inactive</span>
+    </div>
+
+    <button id="toggle-btn" class="btn">Start Captions</button>
+
+    <div class="divider"></div>
+
+    <div class="settings">
+      <div class="setting-row">
+        <span class="setting-label">Position</span>
+        <div class="btn-group" data-setting="position">
+          <button data-value="top">Top</button>
+          <button data-value="bottom" class="active">Bottom</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label">Size</span>
+        <div class="btn-group" data-setting="fontSize">
+          <button data-value="small">S</button>
+          <button data-value="medium" class="active">M</button>
+          <button data-value="large">L</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="hint" id="hint-text">
+      Click "Start Captions", then speak — captions will appear on every open tab.
+    </p>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
