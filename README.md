@@ -23,7 +23,7 @@ A Chrome extension that shows real-time speech-to-text captions in a persistent 
 ## Usage
 
 1. Click the extension icon and press **Start Captions**
-2. A small pinned tab labelled "Live Captions Active" will appear — allow microphone access when Chrome prompts (first time only)
+2. A small pinned tab labelled "Live Captions — Recognition" will appear — allow microphone access when Chrome prompts (first time only)
 3. Speak — captions appear on every open tab
 4. Adjust position (top/bottom) and font size (S/M/L) in the popup at any time
 5. Switch tabs, open new pages — the caption bar follows automatically

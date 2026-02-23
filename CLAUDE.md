@@ -22,12 +22,6 @@ Three approaches were tried in order:
 
 Do not attempt to move recognition back to offscreen documents or content scripts.
 
-## Onboarding flow
-
-`chrome.runtime.onInstalled` (reason: `"install"`) opens `options.html`. The user clicks "Enable Microphone" which calls `navigator.mediaDevices.getUserMedia({ audio: true })`, releases the stream, and shows a success state. This pre-grants mic permission to the extension so the recognition tab doesn't need to steal focus for the permission prompt.
-
-On subsequent loads of `options.html`, the page checks `navigator.permissions.query({ name: "microphone" })` and skips the button if already granted.
-
 ## New tab / navigation handling
 
 `content.js` checks `chrome.storage.session` on load, but this check is not reliable enough on its own. The background uses `chrome.tabs.onUpdated` (status: `"complete"`) to push `showOverlay` to every page that loads while captions are active. This is the primary mechanism for new tabs and navigations.
@@ -43,9 +37,7 @@ On subsequent loads of `options.html`, the page checks `navigator.permissions.qu
 
 ## Mic permission
 
-`getUserMedia` in `options.html` (a `chrome-extension://` page) grants mic permission to the extension's origin permanently. Do NOT add a `getUserMedia` step from the popup — extension popup windows cannot reliably host permission dialogs.
-
-The popup shows a "Microphone not set up" warning (with link to `options.html`) if `navigator.permissions.query({ name: "microphone" })` returns a non-`"granted"` state.
+`webkitSpeechRecognition` in `recognition.js` (a `chrome-extension://` tab) is attributed to the **extension** in Chrome's permission UI. Do NOT add a `getUserMedia` pre-authorization step from the popup — extension popup windows cannot reliably host permission dialogs. The recognition tab handles its own permission prompt by checking `navigator.permissions.query({ name: "microphone" })` on load and bringing itself to focus if the prompt is needed.
 
 ## Settings
 
