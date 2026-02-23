@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Live Closed Captions</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 680px;
+      margin: 60px auto;
+      padding: 0 24px 80px;
+      color: #222;
+      line-height: 1.7;
+    }
+    h1 { font-size: 28px; margin-bottom: 4px; }
+    h2 { font-size: 18px; margin-top: 40px; }
+    p, li { font-size: 15px; color: #333; }
+    table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 14px; }
+    th, td { border: 1px solid #ddd; padding: 10px 14px; text-align: left; }
+    th { background: #f5f5f5; }
+    .meta { color: #888; font-size: 14px; margin-bottom: 40px; }
+    a { color: #1a73e8; }
+  </style>
+</head>
+<body>
+
+  <h1>Privacy Policy</h1>
+  <p class="meta">Live Closed Captions &mdash; last updated February 2026</p>
+
+  <h2>Overview</h2>
+  <p>
+    Live Closed Captions is a Chrome extension that displays real-time speech-to-text
+    captions on any browser tab. The extension itself collects no personal data,
+    makes no network requests of its own, and stores no transcribed text.
+  </p>
+
+  <h2>What data is collected</h2>
+  <p>The extension does not collect, transmit, or store any personal information.</p>
+  <p>
+    The only data persisted locally is your UI preferences (caption bar position
+    and font size), stored in <code>chrome.storage.sync</code>. This contains no
+    personally identifiable information.
+  </p>
+
+  <h2>Speech recognition and audio</h2>
+  <p>
+    Captions are powered by the browser's built-in
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition" target="_blank">Web Speech API</a>
+    (<code>webkitSpeechRecognition</code>). When captions are active, Chrome streams
+    raw audio from your microphone to Google's speech recognition servers and returns
+    transcribed text. This is the same pipeline used by Google Chrome voice search
+    and Google Slides' built-in captions.
+  </p>
+  <p>
+    The extension has no access to the audio stream itself and receives only the
+    transcribed text strings returned by the API. Transcribed text is held in
+    memory only and is discarded after 5 seconds of silence or when captions are stopped.
+    It is never written to disk, sent anywhere, or logged.
+  </p>
+  <p>
+    Google's use of audio data through the Web Speech API is governed by
+    <a href="https://policies.google.com/privacy" target="_blank">Google's Privacy Policy</a>.
+  </p>
+
+  <h2>Data summary</h2>
+  <table>
+    <thead>
+      <tr><th>Data</th><th>Where it goes</th><th>Stored?</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Raw audio</td>
+        <td>Google speech servers (via Chrome's built-in API)</td>
+        <td>Per Google's policy</td>
+      </tr>
+      <tr>
+        <td>Transcribed text</td>
+        <td>In memory in your browser only</td>
+        <td>No — discarded on silence or stop</td>
+      </tr>
+      <tr>
+        <td>Caption bar position &amp; font size</td>
+        <td>Local Chrome storage (<code>chrome.storage.sync</code>)</td>
+        <td>Yes — not sensitive</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Permissions</h2>
+  <p>The extension requests the following Chrome permissions:</p>
+  <ul>
+    <li><strong>Microphone</strong> — required for speech recognition. Audio is processed by Chrome's Web Speech API; the extension does not record or store audio.</li>
+    <li><strong>Tabs</strong> — used to manage the speech recognition tab and deliver captions to all open tabs.</li>
+    <li><strong>Scripting</strong> — used to inject the caption overlay into web pages.</li>
+    <li><strong>Storage</strong> — used to save your position and font size preferences.</li>
+    <li><strong>Host permissions (&lt;all_urls&gt;)</strong> — required to display the caption overlay on any website you visit.</li>
+  </ul>
+
+  <h2>Third parties</h2>
+  <p>
+    Other than Google's Web Speech API (invoked by Chrome itself), the extension
+    communicates with no third-party services. There is no analytics, no advertising,
+    no crash reporting, and no usage tracking of any kind.
+  </p>
+
+  <h2>Children</h2>
+  <p>
+    This extension does not knowingly collect any information from anyone, including children.
+  </p>
+
+  <h2>Changes to this policy</h2>
+  <p>
+    If this policy changes, the updated version will be published at this URL with a
+    revised date at the top.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    Questions can be raised via the
+    <a href="https://github.com/rh13f/live-closed-captions/issues" target="_blank">GitHub issue tracker</a>.
+  </p>
+
+</body>
+</html>
