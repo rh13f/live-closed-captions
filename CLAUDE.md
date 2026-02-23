@@ -2,25 +2,33 @@
 
 ## Architecture
 
-Speech recognition runs in a **dedicated pinned tab** (`recognition.html`) at the extension's `chrome-extension://` origin — not in a content script, not in an offscreen document.
+Speech recognition runs in a **hidden offscreen document** (`offscreen.html`) at the extension's `chrome-extension://` origin — no visible tab, no focus stealing.
+
+Mic permission is granted once during **onboarding** (`options.html`) via `getUserMedia`, which permanently attributes mic access to the extension. This carries over to all extension pages including offscreen documents.
 
 Message flow:
 ```
-recognition.js → chrome.runtime.sendMessage (captionResult)
+offscreen.js → chrome.runtime.sendMessage (captionResult)
   → background.js (relay)
     → chrome.tabs.sendMessage to all tabs (captionUpdate)
       → content.js overlay UI
 ```
 
-## Why a pinned recognition tab (not offscreen document)
+## Why offscreen document (not pinned tab)
 
 Three approaches were tried in order:
 
 1. **Content script** — works, but `webkitSpeechRecognition` is per-page-origin. Each new website requires a fresh mic permission grant.
-2. **Offscreen document** — `webkitSpeechRecognition` returns `"not-allowed"` in offscreen documents regardless of permissions. Chrome does not support speech recognition in non-visible background contexts.
-3. **Pinned recognition tab** ✓ — a real, visible Chrome tab at `chrome-extension://` origin. Mic permission is granted once to the extension. Recognition persists across all page navigation in other tabs. `chrome.tabs.onRemoved` cleans up if the user closes the tab manually.
+2. **Pinned recognition tab** — works, but leaves a visible tab in the tab bar and required awkward focus-stealing to show the Chrome permission prompt.
+3. **Offscreen document + onboarding** ✓ — `options.html` runs `getUserMedia` once on install (user gesture required). This grants mic permission to the `chrome-extension://` origin permanently, including offscreen documents. Recognition then runs silently with no visible tab.
 
-Do not attempt to move recognition back to offscreen documents or content scripts.
+Do not attempt to move recognition back to content scripts. Do not attempt to use `getUserMedia` from the popup — popup windows cannot reliably host permission dialogs.
+
+## Onboarding flow
+
+`chrome.runtime.onInstalled` (reason: `"install"`) opens `options.html`. The user clicks "Enable Microphone" which calls `navigator.mediaDevices.getUserMedia({ audio: true })`, releases the stream, and shows a success state. This grants mic permission to the extension permanently.
+
+On subsequent loads of `options.html`, the page checks `navigator.permissions.query({ name: "microphone" })` and skips the button if already granted.
 
 ## New tab / navigation handling
 
@@ -31,13 +39,15 @@ Do not attempt to move recognition back to offscreen documents or content script
 - **Shadow DOM for overlay** — prevents extension styles conflicting with page styles. The host element (`#cc-overlay-host`) is positioned via `style.setProperty(prop, val, "important")` in JS (not CSS) so page stylesheets can't override it. The shadow DOM `#cc-overlay` is a plain block element filling the host — do NOT make it `position: fixed` (that positions it relative to the fixed shadow host, which has zero height, pushing it off-screen).
 - **Background as relay** — content scripts can't message each other directly.
 - **`chrome.alarms` keep-alive** — prevents service worker sleeping during long sessions.
-- **Auto-restart on `onend`** — handles Chrome's ~7s silence auto-stop in `recognition.js`.
+- **Auto-restart on `onend`** — handles Chrome's ~7s silence auto-stop in `offscreen.js`.
 - **Programmatic injection on start** — `startCaptions()` in `background.js` calls `chrome.scripting.executeScript` on all open tabs so pre-existing tabs (opened before the extension loaded) get the content script.
 - **Double-injection guard** — `if (window.__ccInjected) return;` at top of `content.js` IIFE.
 
 ## Mic permission
 
-`webkitSpeechRecognition` in `recognition.js` (a chrome-extension:// tab) is attributed to the **extension** in Chrome's permission UI. Do NOT add a `getUserMedia` pre-authorization step from the popup — extension popup windows cannot reliably host permission dialogs (Chrome silently rejects or the popup closes). The recognition tab handles its own permission prompt by checking `navigator.permissions.query({ name: "microphone" })` on load and bringing itself to focus if the prompt is needed.
+`getUserMedia` in `options.html` (a `chrome-extension://` page) grants mic permission to the extension's origin permanently. Do NOT add a `getUserMedia` step from the popup — extension popup windows cannot reliably host permission dialogs.
+
+The popup shows a "Microphone not set up" warning (with link to `options.html`) if `navigator.permissions.query({ name: "microphone" })` returns a non-`"granted"` state.
 
 ## Settings
 
@@ -63,8 +73,9 @@ The extension makes **zero network requests** and stores **no caption text**. Tr
 
 ## Permissions used
 
-- `tabs` — query, message, create, and remove tabs
+- `tabs` — query, message, create tabs
 - `scripting` — programmatic content script injection
 - `storage` — session state and synced settings
 - `alarms` — keep-alive ping
+- `offscreen` — create offscreen document for speech recognition
 - `host_permissions: <all_urls>` — inject content script everywhere

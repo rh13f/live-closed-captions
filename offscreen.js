@@ -1,24 +1,15 @@
-// This page runs at chrome-extension:// origin so mic permission is granted
-// to the extension (once, permanently) rather than to individual websites.
-// It auto-starts recognition on load and closes itself when captions stop.
+// Offscreen document — runs at the extension's chrome-extension:// origin.
+// Mic permission was granted during onboarding (options.html), so recognition
+// starts immediately without any permission check or focus stealing.
 
 let recognition = null;
 let shouldRestart = false;
 
-(async () => {
-  // If mic permission hasn't been granted yet, bring this tab into focus so
-  // Chrome can show the permission prompt — prompts don't appear on background tabs.
-  const permStatus = await navigator.permissions.query({ name: "microphone" });
-  if (permStatus.state !== "granted") {
-    const tab = await new Promise((r) => chrome.tabs.getCurrent(r));
-    chrome.tabs.update(tab.id, { active: true });
-  }
-
-  startRecognition();
-})();
+// Auto-start on load
+startRecognition();
 
 chrome.runtime.onMessage.addListener((message) => {
-  if (message.target !== "recognition") return;
+  if (message.target !== "offscreen") return;
   if (message.type === "stopRecognition") stopRecognition();
 });
 
@@ -40,11 +31,16 @@ function startRecognition() {
   recognition.onresult = (event) => {
     let interimTranscript = "";
     let finalTranscript = "";
+
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const result = event.results[i];
-      if (result.isFinal) finalTranscript += result[0].transcript;
-      else interimTranscript += result[0].transcript;
+      if (result.isFinal) {
+        finalTranscript += result[0].transcript;
+      } else {
+        interimTranscript += result[0].transcript;
+      }
     }
+
     if (finalTranscript) {
       chrome.runtime.sendMessage({ type: "captionResult", text: finalTranscript, isFinal: true });
     }
@@ -58,16 +54,18 @@ function startRecognition() {
       shouldRestart = false;
       chrome.runtime.sendMessage({
         type: "micError",
-        msg: "Microphone access denied. Click the microphone icon in the address bar to allow access.",
+        msg: "Microphone access denied. Open the extension's options page to grant access.",
       });
     } else if (event.error !== "no-speech") {
-      console.warn("[CC recognition]", event.error);
+      console.warn("[CC offscreen] Recognition error:", event.error);
     }
   };
 
   recognition.onend = () => {
     recognition = null;
-    if (shouldRestart) setTimeout(startRecognition, 300);
+    if (shouldRestart) {
+      setTimeout(startRecognition, 300);
+    }
   };
 
   recognition.start();

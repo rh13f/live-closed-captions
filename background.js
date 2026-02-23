@@ -2,6 +2,13 @@
 chrome.alarms.create("keepAlive", { periodInMinutes: 1 });
 chrome.alarms.onAlarm.addListener(() => {});
 
+// Open the setup page on first install so the user can grant mic permission
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === "install") {
+    chrome.tabs.create({ url: chrome.runtime.getURL("options.html") });
+  }
+});
+
 // --- Message routing ---
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -19,7 +26,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
 
     case "micError":
-      chrome.storage.session.set({ captionsActive: false, recognitionTabId: null });
+      chrome.storage.session.set({ captionsActive: false });
+      chrome.offscreen.closeDocument().catch(() => {});
       broadcastToAllTabs({ type: "hideOverlay" });
       broadcastToAllTabs({ type: "showError", msg: message.msg });
       break;
@@ -59,55 +67,32 @@ async function startCaptions() {
   const allTabs = await chrome.tabs.query({});
   await Promise.all(allTabs.map((t) => t.id ? injectContentScript(t.id) : Promise.resolve()));
 
-  // Open the recognition tab — a real, visible chrome-extension:// page that can
-  // prompt for mic access and run webkitSpeechRecognition reliably.
-  // pinned: true keeps it as a small favicon tab that doesn't clutter the tab bar.
-  // active: false avoids stealing focus from the user's current page;
-  // recognition.js will bring itself forward if it needs to show a mic prompt.
-  const tab = await chrome.tabs.create({
-    url: chrome.runtime.getURL("recognition.html"),
-    pinned: true,
-    active: false,
+  // Create the offscreen document — it auto-starts recognition on load.
+  // No visible tab, no focus stealing, no clutter.
+  await chrome.offscreen.createDocument({
+    url: chrome.runtime.getURL("offscreen.html"),
+    reasons: ["USER_MEDIA"],
+    justification: "Speech recognition for live closed captions",
   });
-  await chrome.storage.session.set({ recognitionTabId: tab.id });
 
   broadcastToAllTabs({ type: "showOverlay" });
 }
 
 async function stopCaptions() {
-  const { recognitionTabId } = await chrome.storage.session.get("recognitionTabId");
-  await chrome.storage.session.set({ captionsActive: false, recognitionTabId: null });
-
-  if (recognitionTabId) {
-    try { await chrome.tabs.remove(recognitionTabId); } catch {}
-  }
-
+  await chrome.storage.session.set({ captionsActive: false });
+  // Graceful stop before closing the document
+  chrome.runtime.sendMessage({ target: "offscreen", type: "stopRecognition" }).catch(() => {});
+  try { await chrome.offscreen.closeDocument(); } catch {}
   broadcastToAllTabs({ type: "hideOverlay" });
 }
-
-// If the user manually closes the recognition tab, stop captions cleanly
-chrome.tabs.onRemoved.addListener(async (tabId) => {
-  const { captionsActive, recognitionTabId } = await chrome.storage.session.get([
-    "captionsActive",
-    "recognitionTabId",
-  ]);
-  if (captionsActive && tabId === recognitionTabId) {
-    await chrome.storage.session.set({ captionsActive: false, recognitionTabId: null });
-    broadcastToAllTabs({ type: "hideOverlay" });
-  }
-});
 
 // Whenever a page finishes loading while captions are active, push the overlay
 // to it. This covers new tabs, navigations, and page refreshes without needing
 // the content script to read session storage on its own.
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
   if (changeInfo.status !== "complete") return;
-  const { captionsActive, recognitionTabId } = await chrome.storage.session.get([
-    "captionsActive",
-    "recognitionTabId",
-  ]);
+  const { captionsActive } = await chrome.storage.session.get(["captionsActive"]);
   if (!captionsActive) return;
-  if (tabId === recognitionTabId) return; // skip the recognition tab itself
   await injectContentScript(tabId);
   chrome.tabs.sendMessage(tabId, { type: "showOverlay" }).catch(() => {});
 });

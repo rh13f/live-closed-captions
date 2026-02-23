@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Captions — Setup</title>
+  <link rel="stylesheet" href="popup.css" />
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #1e1e2e;
+      width: auto;
+    }
+    .card {
+      width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 32px;
+    }
+    .desc {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #aaa;
+    }
+    #message {
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 1.5em;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <header>
+      <img src="icons/icon48.png" alt="CC" class="logo" />
+      <h1>Live Captions Setup</h1>
+    </header>
+    <p class="desc">
+      Live Captions needs microphone access to transcribe speech.
+      Click the button below to grant access — Chrome will ask you once.
+    </p>
+    <button id="enable-btn" class="btn">Enable Microphone</button>
+    <p id="message"></p>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>

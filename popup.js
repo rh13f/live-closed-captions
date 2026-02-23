@@ -80,3 +80,19 @@ function markActive(setting, value) {
     b.classList.toggle("active", b.dataset.value === value);
   });
 }
+
+// ─── Mic permission warning ────────────────────────────────────────────────
+
+const micWarning = document.getElementById("mic-warning");
+
+navigator.permissions.query({ name: "microphone" }).then((status) => {
+  micWarning.style.display = status.state !== "granted" ? "" : "none";
+  status.onchange = () => {
+    micWarning.style.display = status.state !== "granted" ? "" : "none";
+  };
+}).catch(() => {});
+
+document.getElementById("setup-link").addEventListener("click", (e) => {
+  e.preventDefault();
+  chrome.runtime.openOptionsPage();
+});
