@@ -5,7 +5,6 @@
   "description": "Real-time speech-to-text captions overlay on any page or tab.",
   "permissions": ["tabs", "scripting", "storage", "alarms"],
   "host_permissions": ["<all_urls>"],
-  "options_page": "options.html",
   "background": {
     "service_worker": "background.js"
   },

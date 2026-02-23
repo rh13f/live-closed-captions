@@ -2,13 +2,6 @@
 chrome.alarms.create("keepAlive", { periodInMinutes: 1 });
 chrome.alarms.onAlarm.addListener(() => {});
 
-// Open the setup page on first install so the user can grant mic permission upfront
-chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === "install") {
-    chrome.tabs.create({ url: chrome.runtime.getURL("options.html") });
-  }
-});
-
 // --- Message routing ---
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
